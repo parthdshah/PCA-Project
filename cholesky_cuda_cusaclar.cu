@@ -40,11 +40,10 @@ void check_error(const char *msg)
 
 int main(int argc, char* argv[])
 { 
-	
 	cudsHandle_t cudenseH = NULL;
-    cublasHandle_t cublasH = NULL;
-    cublasStatus_t cublas_status = CUBLAS_STATUS_SUCCESS;
-    cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;  
+	cublasHandle_t cublasH = NULL;
+    	cublasStatus_t cublas_status = CUBLAS_STATUS_SUCCESS;
+    	cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;  
 	int lwork = 0;
 	int *devInfo = NULL;
 	
@@ -63,16 +62,16 @@ int main(int argc, char* argv[])
 	}		
 
 	// create cudense/cublas handle
-    cusolver_status = cudsCreate(&cudenseH);
-    assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
+    	cusolver_status = cudsCreate(&cudenseH);
+    	assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
 
-    cublas_status = cublasCreate(&cublasH);
-    assert(CUBLAS_STATUS_SUCCESS == cublas_status);
+    	cublas_status = cublasCreate(&cublasH);
+    	assert(CUBLAS_STATUS_SUCCESS == cublas_status);
 	
 	// allocate memory in the GPU and set the output matrix to 0s.. And also copy the input matrix from hot to device
 	
 	double *d_matrix_input, *d_matrix_output;
-    check_error(cudaMalloc((void **) &d_matrix_input, num_rows * num_cols * sizeof(float)));
+    	check_error(cudaMalloc((void **) &d_matrix_input, num_rows * num_cols * sizeof(float)));
 	check_error(cudaMalloc((void **) &d_matrix_output, num_rows * num_cols * sizeof(float)));
 	check_error(cudaMemset(*d_matrix_output, 0, num_rows * num_cols * sizeof(float)));
 	check_error(cudaMemcpy(*d_matrix_input, *h_matrix, sizeof(float) * num_rows * num_cols, cudaMemcpyHostToDevice));
@@ -92,7 +91,7 @@ int main(int argc, char* argv[])
 	
 	double *d_work = NULL; 	
 	cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
-    assert(cudaSuccess == cudaStat1);
+    	assert(cudaSuccess == cudaStat1);
 	
 	timer.start();
 	
@@ -107,20 +106,23 @@ int main(int argc, char* argv[])
            devInfo );
 	
 	cudaStat1 = cudaDeviceSynchronize(); // synchronization
-    assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
-    assert(cudaSuccess == cudaStat1);
+    	assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
+    	assert(cudaSuccess == cudaStat1);
 	
 	timer.stop();	
 	//// check if Cholesky is good or not
 
 	cudaStat1 = cudaMemcpy(&info_gpu, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
-    assert(cudaSuccess == cudaStat1);
+    	assert(cudaSuccess == cudaStat1);
+	
+	// following can be added if required
+    	//printf("after geqrf: info_gpu = %d\n", info_gpu); 
+    	assert(0 == info_gpu);
 
-    printf("after geqrf: info_gpu = %d\n", info_gpu);
-    assert(0 == info_gpu);
-
-	cudaStat1 = cudaMemcpy(h_matrix_ouput,  , sizeof(double)*num_rows*num_cols, cudaMemcpyDeviceToHost);
-    assert(cudaSuccess == cudaStat1);
+	cudaStat1 = cudaMemcpy(h_matrix_ouput,d_work , sizeof(double)*num_rows*num_cols, cudaMemcpyDeviceToHost); 
+	//d_work needs to checked
+    	
+    	assert(cudaSuccess == cudaStat1);
 	
 	printf("Time elapsed = %g ms\n", timer.Elapsed());
 	
@@ -150,7 +152,7 @@ int main(int argc, char* argv[])
 		cudaFree(d_work);
 	
 	if (cublasH ) cublasDestroy(cublasH);   
-    if (cudenseH) cudsDestroy(cudenseH); 	
+    	if (cudenseH) cudsDestroy(cudenseH); 	
 
 	return 0;	
 }
