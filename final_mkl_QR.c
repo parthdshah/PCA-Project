@@ -22,11 +22,12 @@
 
   Modified:
 
-    14 March 2015
+    23 March 2015
 
   Author:
 
     Parth Shah
+	Email: parthdshah@ufl.edu
 */
 
 //#define NUM_PTHREADS 4
@@ -53,6 +54,15 @@ int main()
 	int matrix_order = LAPACK_ROW_MAJOR; 
 	int i, j, k;
 	double avg_time = 0, s_time, e_time;
+	
+	FILE *fp;							//output file pointer
+	fp = fopen("results.txt", "a");
+	
+	if (fp == NULL)
+	{
+			printf ("Cannot open file.\n");
+			exit(0);
+	}
 	
 	m = 2; 							
 	for (i = 1; i < 10; i++)
@@ -82,6 +92,9 @@ int main()
 		}
 		
 		avg_time = avg_time / 1000;
+		fprintf (fp, "Input size: %d ,Time: %f\n", m, avg_time);  //print the results into the output file
+		
+		fclose(fp);
 		
 		//deallocate the memory
 		free(tau);
