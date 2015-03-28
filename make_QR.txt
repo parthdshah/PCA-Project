@@ -1,0 +1,11 @@
+CC = icc
+FILES = final_mkl_QR.c
+OUT_EXE = final_mkl_QR
+
+build: $(FILES)
+        $(CC) -mmic -mkl -o $(OUT_EXE) $(FILES) -lm
+
+clean:
+        rm -f *.o core
+
+rebuild: clean build
