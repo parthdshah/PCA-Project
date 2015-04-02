@@ -208,7 +208,7 @@ s_time = timerval();
 	
 	 mkl_dcsrmultcsr(&trans, &request, &sort, &m, &n, &n, nz, ia, ja, nz, ia, ja, nzc, jc, ic, &nzmax, &info);
 	
-	#pragma omp barrier
+
 	
 
 	}
