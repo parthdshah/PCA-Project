@@ -39,6 +39,7 @@
 #include <mkl_blas.h> 
 #include <math.h>
 #include <time.h>
+#include <stdlib.h>
 
 double timerval () 
 {
@@ -56,7 +57,6 @@ int main()
 	double avg_time = 0, s_time, e_time;
 	
 	FILE *fp;							//output file pointer
-	fp = fopen("results.txt", "a");
 	
 	if (fp == NULL)
 	{
@@ -75,7 +75,7 @@ int main()
 	
 		// initialize the matrix
 		for(j = 0; j < n; j++)
-			for(k = 0; k < m; i++)
+			for(k = 0; k < m; k++)
 				a[k + j * m] = (k + j + 1);
 		
 		for (j = 0; j < 1000; j++)
@@ -92,8 +92,9 @@ int main()
 		}
 		
 		avg_time = avg_time / 1000;
-		fprintf (fp, "Input size: %d ,Time: %f\n", m, avg_time);  //print the results into the output file
 		
+		fp = fopen("results.txt", "a");
+		fprintf (fp, "Input size: %d ,Time: %f\n", m, avg_time);  //print the results into the output file
 		fclose(fp);
 		
 		//deallocate the memory
