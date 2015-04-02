@@ -198,22 +198,23 @@ for (iterations=0; iterations<10; iterations++)
 
 	
 /*Compute the product of two sparse matrices*/
+s_time = timerval();
 	#pragma omp parallel shared(m,n,ia,ja,jc,ic,nz,nzc,nzmax,info,request,sort,trans) private(i)
 	{
 	#pragma omp for
 	for(i=0; i<1000;i++)
 		{
-	s_time = timerval();
+	
 	
 	 mkl_dcsrmultcsr(&trans, &request, &sort, &m, &n, &n, nz, ia, ja, nz, ia, ja, nzc, jc, ic, &nzmax, &info);
 	
 	#pragma omp barrier
 	
-	e_time = timerval();
+
+	}
+	}
+		e_time = timerval();
 	avg_time = (e_time - s_time);
-	}
-	}
-	
 /* write the timing information in "output.txt"*/
 	avg_time = avg_time / 1000;
 
