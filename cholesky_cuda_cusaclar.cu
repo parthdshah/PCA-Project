@@ -8,7 +8,7 @@
 
 // author	: yathindra kota 
 // mail		: yatkota@ufl.edu
-// last modified: 29 March, 2015
+// last modified: 2 April, 2015
 
 #include <stdio.h>
 #include <time.h>
@@ -47,7 +47,6 @@ int main(int argc, char* argv[])
 	int num_iterations = 10;
 	
 	FILE *fp;
-	fp = fopen("cholesky_output.txt","w");
 	
 	// create cudense/cublas handle
     	cusolver_status = cudsCreate(&cudenseH);
@@ -120,13 +119,17 @@ int main(int argc, char* argv[])
 			
 			if(info_gpu_h != 0)
 			{
+				fp = fopen("cholesky_output.txt","w+");
 				fprintf(fp,"Unsuccessful execution. DevInfo is not zero. Iterations number = %d \n", temp);
+				fclose(fp);
 			}	
 		}
 		cudaStat1 = cudaMemcpy(h_matrix_ouput, d_work, sizeof(double)*num_rows*num_cols, cudaMemcpyDeviceToHost); 
 		//d_work needs to checked
 		
-		printf("Time elapsed(average for the specified iterations) = %g ms, number of rows is %d\n", time_iterations/num_iterations,num_rows);
+		fp = fopen("cholesky_output.txt","a");
+		fprintf(fp,"Time elapsed(average for the specified iterations) = %g ms, number of rows is %d\n", time_iterations/num_iterations,num_rows);
+		fclose(fp);
 		
 		time_iterations = 0;
 		
@@ -145,7 +148,9 @@ int main(int argc, char* argv[])
 		fprintf(fp,"\n");
 		for(tempj=0; tempi<num_cols;tempj++)	
 		{
+			fp = fopen("cholesky_output.txt","a");
 			fprintf(fp,"%f", h_matrix_ouput[(tempj * num_rows) + tempi]);
+			fclose(fp);
 		}		
 	}
 	
