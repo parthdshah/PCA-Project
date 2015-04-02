@@ -64,12 +64,6 @@ double avg_time = 0, s_time, e_time;
 //open file to write results
 FILE *fp1;
 
-		if((fp1 = fopen("output.txt","w+"))==NULL)
-		{
-			printf("error opening file\n");
-
-		}
-
 
 int m=4;
 int iterations;
@@ -217,11 +211,19 @@ s_time = timerval();
 	avg_time = (e_time - s_time);
 /* write the timing information in "output.txt"*/
 	avg_time = avg_time / 1000;
+	
+	
+		if((fp1 = fopen("output.txt","w+"))==NULL)
+		{
+			printf("error opening file\n");
 
-	fprintf (fp1, "Input size: %d x %d ,Time: %lf\n", m,n, avg_time); 
+		}
+	lseek(fp1,0,SEEK_END);
+
+	fprintf (fp1, "/n Input size: %d x %d ,Time: %lf\n", m,n, avg_time); 
 
 
-
+fclose(fp1);	
 	
 	free(ja);
 	free(ia);
@@ -233,7 +235,7 @@ s_time = timerval();
 
 }
 
-fclose(fp1);	
+
 return 0;
 
 }
