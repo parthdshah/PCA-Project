@@ -8,163 +8,176 @@
 
 // author	: yathindra kota 
 // mail		: yatkota@ufl.edu
-// last modified: 2 April, 2015
+// last modified: 13 April, 2015
 
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
+#include "cuda_runtime.h"
+#include<iostream>
+#include<iomanip>
+#include<stdlib.h>
+#include<stdio.h>
+#include<assert.h>
 #include <math.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <cuda_runtime.h>
+#include <time.h>
+#include <sys/time.h>
+#include <cusolverDn.h>
 #include <cublas_v2.h>
-#include <cudense.h>
+#include <cuda_runtime_api.h>
 
-#define NUM_THREADS (num_rows*num_cols)
-#define BLOCK_WIDTH 1000
-
-void check_error(const char *msg)
+double timerval()
 {
-	cudaError_t err = cudaGetLastError();
-	if( cudaSuccess != err)
+	struct timeval st;
+	gettimeofday(&st, NULL);
+	return (st.tv_sec+st.tv_usec*1e-6);
+}
+
+// Error Checker for CuSOLVER functions
+void cusolveSafeCall(cusolverStatus_t error1)
+{
+	if(CUSOLVER_STATUS_SUCCESS != error1) 
 	{
-		printf("CUDA ERROR: %s (%s).\n", msg, cudaGetErrorString(err));
+		FILE *fp;
+		fp = fopen("cholesky_output.txt","a");
+		fprintf(fp,"CUDA ERROR in the Cholesky function call or in the buffer and the error is ");
+		if(error1 == CUSOLVER_STATUS_NOT_INITIALIZED) 
+			fprintf(fp, "CUSOLVER_STATUS_NOT_INITIALIZED\n");
+		if(error1 == CUSOLVER_STATUS_INVALID_VALUE) 
+			fprintf(fp, "CUSOLVER_STATUS_INVALID_VALUE\n");	
+		if(error1 == CUSOLVER_STATUS_ARCH_MISMATCH) 
+			fprintf(fp, "CUSOLVER_STATUS_ARCH_MISMATCH\n");
+		if(error1 == CUSOLVER_STATUS_INTERNAL_ERROR) 
+			fprintf(fp, "CUSOLVER_STATUS_INTERNAL_ERROR\n");
+		fclose(fp);
 		exit(EXIT_FAILURE);
 	}
 }
 
-
-int main(int argc, char* argv[])
-{ 
-	cudsHandle_t cudenseH = NULL;
-    	cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;  
-	
-	int lwork = 0;
-	int *devInfo = NULL;
-	int info_gpu_h = 0;
-	int num_rows = 4;
-	int num_cols = 4;
-	int num_iterations = 10;
-	
-	FILE *fp;
-	
-	// create cudense/cublas handle
-    	cusolver_status = cudsCreate(&cudenseH);
-    	cudaError_t cudaStat1;
-	float time_iterations = 0; //time for given set of iterations
-	
-	for(int matsize = 0; matsize < 10; matsize++)
-	{	
-		double *h_matrix;
-		double *h_matrix_ouput;
-		
-		h_matrix = malloc(num_rows*num_cols, sizeof(double));
-		h_matrix_ouput = malloc(num_rows*num_cols, sizeof(double));
-		
-		int temp;
-		for(temp = 0; temp < num_iterations; temp++)
-		{
-			//initialize the matrix to a random set of values (0 to 10) of type float 	
-			for(int tempi=0; tempi<num_rows;tempi++)
-			{
-				for(int tempj=0; tempi<num_cols;tempj++)	
-				{
-					h_matrix[(tempi*num_rows) + tempj] = (rand()%100)/10; // set the input matrix elements 
-				}	
-			}		
-
-			// allocate memory in the GPU and also copy the input matrix from hot to device
-			double *d_matrix_input;
-			check_error(cudaMalloc((void **) &d_matrix_input, num_rows * num_cols * sizeof(float)));
-			check_error(cudaMemcpy(*d_matrix_input, *h_matrix, sizeof(float) * num_rows * num_cols, cudaMemcpyHostToDevice));
-
-			//------	
-			// alocation of the buffer in the GPU
-			// The following function allocates required amount of memory in the GPU and this
-			// function is specific to Cholesky function which is called next
-			// This function is also from the library cuSolver
-				
-			cusolverStatus_t cusolverDnDpotrf_bufferSize(cudenseH,
-						 CUBLAS_FILL_MODE_LOWER, /*cublasFillMode_t uplo, Maybe "CUBLAS_FILL_MODE_LOWER" */
-						 num_rows,
-						 d_matrix_input,
-						 num_rows,
-						 &Lwork);
-			
-			double *d_work = NULL; 	
-			cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*Lwork);
-			
-			cudaStat1 = cudaDeviceSynchronize(); // synchronization
-			
-			timer.start();
-			
-			// implementation of Cholesky
-			cusolverStatus_t cusolverDnDpotrf(cudenseH,
-				   CUBLAS_FILL_MODE_LOWER,/* not sure, needs to be checked*/
-				   num_rows,
-				   d_matrix_input,
-				   num_rows,
-				   d_work, /*not sure */
-				   Lwork,
-				   devInfo );
-			
-			cudaStat1 = cudaDeviceSynchronize(); // synchronization
-			
-			timer.stop();
-			
-			time_iterations += timer.Elapsed;	
-			
-			//// check if Cholesky is good or not
-			cudaStat1 = cudaMemcpy(&info_gpu_h, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
-			
-			if(info_gpu_h != 0)
-			{
-				fp = fopen("cholesky_output.txt","w+");
-				fprintf(fp,"Unsuccessful execution. DevInfo is not zero. Iterations number = %d \n", temp);
-				fclose(fp);
-			}	
-		}
-		cudaStat1 = cudaMemcpy(h_matrix_ouput, d_work, sizeof(double)*num_rows*num_cols, cudaMemcpyDeviceToHost); 
-		//d_work needs to checked
-		
+// Error checker for CUDA memory related operations
+void check_error(cudaError_t message1)
+{
+	if( cudaSuccess != message1)
+	{
+		FILE *fp;
 		fp = fopen("cholesky_output.txt","a");
-		fprintf(fp,"Time elapsed(average for the specified iterations) = %g ms, number of rows is %d\n", time_iterations/num_iterations,num_rows);
+		fprintf(fp,"CUDA ERROR: %s\n",cudaGetErrorString(message1));
 		fclose(fp);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		FILE *fp;
+		fp = fopen("cholesky_output.txt","a");
+		//fprintf(fp,"check_error: %s\n",cudaGetErrorString(message1));
+		fclose(fp);
+	}	
+}
+
+int main()
+{
+	int num_cols = 4; //start number of columns
+	int num_rows = 4; //start number of rows
+	int iterations = 1; // Total number of iterations to be performed
+	int mat_sizes = 16; // Final matrix size required to be calculated
+	// if mat_sizes = 2: perform for 4 and 8.. 
+	int i=0, j=0; // count variables
+	FILE *fp; // File pointer to point to the output file
+	double avg_time = 0, s_time, e_time; // time calculation variables 
+	
+	fp = fopen("cholesky_output.txt","w+"); // output file
+	fprintf(fp,"Start:\n");
+	fclose(fp);
+	
+	int mat_counter = 0; //used as counter for matrix sizes	
+	
+	// perform the computation for mat_sizes number of different matrix sizes
+	for(mat_counter = 0; mat_counter < mat_sizes; mat_counter++)
+	{
+		avg_time = 0;
 		
-		time_iterations = 0;
-		
-		free(h_matrix);
-		free(h_matrix_ouput);		
+		// perform the computations for iterations number of times
+		for(int tempj = 0; tempj< iterations; tempj ++)
+		{
+			double *h_matrix;
+			h_matrix = (double *) calloc(num_rows*num_cols,sizeof(double)); //(double **)malloc(sizeof(double *) * num_cols);
+			
+			fp = fopen("cholesky_output.txt","a");
+			//set matrix input here			
+			for(i = 0; i < num_cols; i++)
+			{
+				for(j = 0; j < num_rows; j++)
+				{			
+					if(i == j)
+					{
+						h_matrix[j + i*num_rows] = i+1;
+					}
+					
+					else 
+						h_matrix[j + i*num_rows] = fmin((float)i,(float)j) - 1; 
+					//	fprintf (fp,"%f\t",h_matrix[j + i*num_rows] );
+				}
+				//	fprintf (fp,"\n");
+			}
+			fclose(fp);
+			
+			// --- Setting the device matrix and copying the host matrix to the device
+			double *d_matrix;            
+			check_error(cudaMalloc(&d_matrix, num_rows * num_cols * sizeof(double)));
+			check_error(cudaMemcpy(d_matrix, h_matrix, num_rows* num_cols * sizeof(double), cudaMemcpyHostToDevice));
+			// --- cuSOLVE input/output parameters/arrays
+			int work_size = 0;
+			int *devInfo;           
+			check_error(cudaMalloc(&devInfo, sizeof(int)));
+			// --- CUDA solver initialization
+			cusolverDnHandle_t solver_handle;
+			cusolverDnCreate(&solver_handle);
+				
+			// --- CHOLESKY buffer initialization
+			cusolveSafeCall(cusolverDnDpotrf_bufferSize(solver_handle, CUBLAS_FILL_MODE_LOWER, num_rows, d_matrix, num_rows, &work_size));
+
+			double *work;   
+			check_error(cudaMalloc(&work, work_size * sizeof(double)));
+				
+			s_time = timerval();
+			
+			// Cholesky execution
+			cusolveSafeCall(cusolverDnDpotrf(solver_handle, CUBLAS_FILL_MODE_LOWER, num_rows, d_matrix, num_rows, work, work_size, devInfo));
+			
+			e_time = timerval();	
+					
+			avg_time += (e_time - s_time);
+			
+			int devInfo_h = 0;  
+			check_error(cudaMemcpy(&devInfo_h, devInfo, sizeof(int), cudaMemcpyDeviceToHost));
+			if (devInfo_h != 0) std::cout   << "Unsuccessful potrf execution\n\n";
+			
+			fp = fopen("cholesky_output.txt","a");	
+			//fprintf(fp,"\nFactorized matrix\n");
+			
+			fclose(fp);
+			check_error(cudaMemcpy(h_matrix, d_matrix, num_rows * num_cols * sizeof(double), cudaMemcpyDeviceToHost));
+			
+			/*
+			// to print output
+			fp = fopen("cholesky_output.txt","a");
+				
+			for( i = 0; i < num_rows; i++)
+				for( j = 0; j < num_cols; j++)
+					if (i <= j) //fprintf(fp,"L[%i, %i] = %lf\n", i, j, h_matrix[j + i*num_rows]);
+
+				fclose(fp);	
+			
+			*/
+			free(h_matrix);		
+			check_error(cudaFree(d_matrix));
+			check_error(cudaFree(devInfo));
+			check_error(cudaFree(work));			
+			cusolverDnDestroy(solver_handle);			
+		}
+		fp = fopen("cholesky_output.txt","a");
+		fprintf(fp,"Execution time for matrix size %d, iterations= %d is %g\n", num_rows ,iterations, avg_time/iterations );
+		fclose(fp);	
 			
 		num_cols *= 2;
-		num_rows *= 2;
-	}
-	// print output to file if required
-	/*
-	
-	fprintf(fp,"output is\n");	
-	for(tempi=0; tempi<num_rows;tempi++)
-	{
-		fprintf(fp,"\n");
-		for(tempj=0; tempi<num_cols;tempj++)	
-		{
-			fp = fopen("cholesky_output.txt","a");
-			fprintf(fp,"%f", h_matrix_ouput[(tempj * num_rows) + tempi]);
-			fclose(fp);
-		}		
-	}
-	
-	*/
-	//de-allocating the memory
-	
-	if(d_matrix_input)
-		cudaFree(d_matrix_input);
-		
-	if(d_work)
-		cudaFree(d_work);
-	
-    	if (cudenseH) 
-		cudsDestroy(cudenseH); 	
-
-	return 0;	
+		num_rows *= 2;		
+	}	
+    return 0;
 }
