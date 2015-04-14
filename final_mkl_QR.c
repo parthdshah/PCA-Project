@@ -40,6 +40,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 double timerval () 
 {
@@ -58,36 +59,36 @@ int main()
 	
 	FILE *fp;							//output file pointer
 	
-	if (fp == NULL)
+	/*if (fp == NULL)
 	{
 			printf ("Cannot open file.\n");
 			exit(0);
-	}
+	}*/
 	
-	m = 2; 							
-	for (i = 1; i < 10; i++)
+	m = 4096; 							
+	for (i = 0; i < 1; i++)
 	{	
 		m *= 2; 						// increase the dimension of Matrix with every iteration
 		n = m;			   				// Assuming a square matrix.
 		lda = m;		   				// lda: leading dimension of Matrix
 		a = calloc(m*n,sizeof(double));
 		tau = calloc(m,sizeof(double));
-	
+		avg_time = 0;
 		// initialize the matrix
 		for(j = 0; j < n; j++)
 			for(k = 0; k < m; k++)
 				a[k + j * m] = (k + j + 1);
 		
-		for (j = 0; j < 1000; j++)
+		for (j = 0; j < 50; j++)
 		{
 			s_time = timerval();
 			info = LAPACKE_dgeqrf(matrix_order, m, n, a, lda, tau);  //library function for double precision QR decomposition for a general matrix
 			#pragma omp barrier
-			info1 = LAPACKE_dorgqr(matrix_layout, m, n, n, a, lda, tau); //library function for extracting Q matrix from output matrix of previous instruction
+			info1 = LAPACKE_dorgqr(matrix_order, m, n, n, a, lda, tau); //library function for extracting Q matrix from output matrix of previous instruction
 			e_time = timerval();			
 			avg_time += (e_time - s_time);
 			
-			if (info <> 0 || info1 <> 0)// if info = 0 the execution is successful else the value in info is illegal element in Matrix
+			if (info != 0 || info1 != 0)// if info = 0 the execution is successful else the value in info is illegal element in Matrix
 				return info;
 		}
 		
@@ -99,7 +100,6 @@ int main()
 		
 		//deallocate the memory
 		free(tau);
-		free(r);
 		free(a);
 	}	
 	
