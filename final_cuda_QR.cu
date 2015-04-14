@@ -1,3 +1,34 @@
+/******************************************************************************/
+/*
+  Purpose:
+
+	QR decomposition of Matrix using cusolver in CUDA
+	
+  Description:
+  
+	The program computes a QR factorization of a real m-by-n matrix A as A = Q*R.
+	The program does not form the matrix Q explicitly. Instead, Q is represented as a product of min(m, n)
+	elementary reflectors :
+	Q = H(1)*H(2)* ... *H(k), where k = min(m, n)
+	Each H(i) has the form
+	H(i) = I - tau*v*vT for real flavors
+	where tau is a real scalar stored in tau(i), and v is a real vector with v(1:i-1) = 0 and
+	v(i) = 1.
+	
+	On exit, v(i+1:m) is stored in a(i+1:m, i).
+	
+	on exit, the elements on and above the diagonal of the array a contain the
+	min(n,m)-by-n upper trapezoidal matrix R (R is upper triangular if m ≥ n);
+
+  Modified:
+
+    14 April 2015
+
+  Author:
+
+    Parth Shah
+	Email: parthdshah@ufl.edu
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<time.h>
