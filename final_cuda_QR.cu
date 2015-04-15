@@ -28,10 +28,12 @@
 
     Parth Shah
 	Email: parthdshah@ufl.edu
+*/
 
-#include<stdlib.h>
-#include<stdio.h>
-#include<time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include <time.h>
 #include <cusolverDn.h>
 #include <cublas_v2.h>
 #include <cuda_runtime_api.h>
@@ -49,7 +51,7 @@ void cusolveSafeCall(cusolverStatus_t error1)
 	if(CUSOLVER_STATUS_SUCCESS != error1) 
 	{
 		FILE *fp;
-		fp = fopen("results.txt","a");
+		fp = fopen("results_cuda.txt","a");
 		fprintf(fp,"CUDA ERROR in the Cholesky function call or in the buffer and the error is ");
 		if(error1 == CUSOLVER_STATUS_NOT_INITIALIZED) 
 			fprintf(fp, "CUSOLVER_STATUS_NOT_INITIALIZED\n");
@@ -70,30 +72,30 @@ void check_error(cudaError_t message1)
 	if( cudaSuccess != message1)
 	{
 		FILE *fp;
-		fp = fopen("results.txt","a");
+		fp = fopen("results_cuda.txt","a");
 		fprintf(fp,"CUDA ERROR: %s\n",cudaGetErrorString(message1));
 		fclose(fp);
 		exit(EXIT_FAILURE);
 	}
-	else
+	/*else
 	{
 		FILE *fp;
-		fp = fopen("results.txt","a");
+		fp = fopen("results_cuda.txt","a");
 		//fprintf(fp,"check_error: %s\n",cudaGetErrorString(message1));
 		fclose(fp);
-	}	
+	}*/	
 }
 
 int main()
 {	
-	double *A;
+	double *A, *tau;
 	int m, n, lda;
 	
 	int i, j, k;
 	double avg_time = 0, s_time, e_time;
 	
 	FILE *fp;							//output file pointer
-	fp = fopen("results.txt","w+");   
+	fp = fopen("results_cuda.txt","w+");   
 	fprintf(fp,"Start:\n");
 	fclose(fp);
 	
@@ -105,7 +107,7 @@ int main()
 	
 	m = 2;
 		
-	for (i = 1; i < 2; i++)
+	for (i = 1; i < 16; i++)
 	{
 		double *d_A = NULL; // linear memory of GPU 
 		double *d_tau = NULL; // linear memory of GPU 	
@@ -115,36 +117,35 @@ int main()
 		n = m;			   				// Assuming a square matrix.
 		lda = m;		   				// lda: leading dimension of Matrix
 		
-		A = calloc(m*n,sizeof(double)); //allocate memory in host
-		tau = calloc(m,sizeof(double));			
+		A = (double *)calloc(m*n,sizeof(double)); //allocate memory in host
+		tau = (double *)calloc(m,sizeof(double));			
 		
 		//allocate memory in GPU
 		check_error(cudaMalloc (&d_A , sizeof(double) * lda * m));	
 		check_error(cudaMalloc (&d_tau, sizeof(double) * m)); 			
 		
-		//Create cusolver handle 
 		cusolverDnHandle_t handle;
 		cusolverDnCreate(&handle);
 		
 		//call function for calculating the work buffer size
-		cusolveSafeCall(cusolverDnDgeqrf_bufferSize( handle, m, n, d_A, lda, &lwork); 
+		cusolveSafeCall(cusolverDnDgeqrf_bufferSize( handle, m, n, d_A, lda, &lwork)); 
 		
 		//allocate the work buffer memory
 		check_error(cudaMalloc(&d_work, sizeof(double)*lwork));						
 		
 		avg_time = 0;
-		for (j = 0; j < 1000; j++)
+			// initialize the matrix
+		for(j = 0; j < n; j++)
+			for(k = 0; k < m; k++)
+				A[k + j * m] = (k + j + 1);
+			
+		//copy the matrix to GPU
+		check_error(cudaMemcpy(d_A, A, sizeof(double) * lda * m , cudaMemcpyHostToDevice));
+		
+		for (j = 0; j < 1; j++)
 		{	
 			info_gpu = 0;
-			
-			// initialize the matrix
-			for(j = 0; j < n; j++)
-				for(k = 0; k < m; k++)
-					A[k + j * m] = (k + j + 1);
-				
-			//copy the matrix to GPU
-			check_error(cudaMemcpy(d_A, A, sizeof(double) * lda * m , cudaMemcpyHostToDevice));
-
+		
 			//library function for double precision QR decomposition for a general matrix
 			s_time = timerval();
 			cusolveSafeCall(cusolverDnDgeqrf( handle, m, n, d_A, lda, d_tau, d_work, lwork, devInfo));  
@@ -163,7 +164,7 @@ int main()
 		
 		avg_time = avg_time / 1000;
 		
-		fp = fopen("results.txt", "a");
+		fp = fopen("results_cuda.txt", "a");
 		fprintf (fp, "Input size: %d ,Time: %f\n", m, avg_time);  //print the results into the output file
 		fclose(fp);
 		
@@ -171,13 +172,13 @@ int main()
 		check_error(cudaFree(d_A)); 
 		check_error(cudaFree(d_tau));				
 		check_error(cudaFree(d_work));
-		check_error(cudsDestroy(cudenseH));
+		cusolverDnDestroy(handle);
 		
 		free(A);
 		free(tau);
 	}
 	
-	free(devInfo);		
+	check_error(cudaFree(devInfo));		
 
     return 0;
 }
