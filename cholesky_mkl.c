@@ -8,7 +8,7 @@
 
 // author	: yathindra kota 
 // mail		: yatkota@ufl.edu
-// last modified: 14 April, 2015
+// last modified: 15 April, 2015
 
 #include<stdlib.h>
 #include<stdio.h>
@@ -39,7 +39,7 @@ int main()
 	
 	lapack_int errorcheck;
 	int matrix_order = LAPACK_ROW_MAJOR;
-	char uplo = 'L';
+	char uplo = 'U';
 	lapack_int order_matrix;
 	lapack_int lda;
 	
