@@ -1,0 +1,14 @@
+Start:
+Input size: 4 ,Time: 0.000041
+Input size: 8 ,Time: 0.000064
+Input size: 16 ,Time: 0.000110
+Input size: 32 ,Time: 0.000204
+Input size: 64 ,Time: 0.000477
+Input size: 128 ,Time: 0.001820
+Input size: 256 ,Time: 0.007005
+Input size: 512 ,Time: 0.015938
+Input size: 1024 ,Time: 0.036495
+Input size: 2048 ,Time: 0.091624
+Input size: 4096 ,Time: 0.289924
+Input size: 8192 ,Time: 1.678482
+Input size: 16384 ,Time: 11.880535
