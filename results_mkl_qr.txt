@@ -1,0 +1,24 @@
+Phi:
+Input size: 4 ,Time: 0.000108
+Input size: 8 ,Time: 0.000046
+Input size: 16 ,Time: 0.000122
+Input size: 32 ,Time: 0.000424
+Input size: 64 ,Time: 0.001902
+Input size: 128 ,Time: 0.023288
+Input size: 256 ,Time: 0.045468
+Input size: 512 ,Time: 0.126117
+Input size: 1024 ,Time: 0.305387
+Input size: 2048 ,Time: 0.890454
+Input size: 4096 ,Time: 3.065302
+E5
+Input size: 4 ,Time: 0.000009
+Input size: 8 ,Time: 0.000002
+Input size: 16 ,Time: 0.000008
+Input size: 32 ,Time: 0.000017
+Input size: 64 ,Time: 0.000059
+Input size: 128 ,Time: 0.000451
+Input size: 256 ,Time: 0.001033
+Input size: 512 ,Time: 0.003667
+Input size: 1024 ,Time: 0.017955
+Input size: 2048 ,Time: 0.094697
+Input size: 4096 ,Time: 0.551747
