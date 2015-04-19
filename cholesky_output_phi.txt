@@ -1,0 +1,12 @@
+Start:
+Execution time for matrix size 4, iterations= 1000 is 1.8539e-05
+Execution time for matrix size 8, iterations= 1000 is 2.48203e-05
+Execution time for matrix size 16, iterations= 1000 is 5.42755e-05
+Execution time for matrix size 32, iterations= 1000 is 0.000194 
+Execution time for matrix size 64, iterations= 1000 is 0.00684
+Execution time for matrix size 128, iterations= 1000 is 0.00825
+Execution time for matrix size 256, iterations= 1000 is 0.026396
+Execution time for matrix size 512, iterations= 1000 is 0.13325
+Execution time for matrix size 1024, iterations= 1000 is 0.52486
+Execution time for matrix size 2048, iterations= 1000 is 2.0071
+Execution time for matrix size 4096, iterations= 1000 is 7.5497
