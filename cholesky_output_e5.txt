@@ -1,0 +1,15 @@
+Start:
+Average execution time for matrix order 4 and 1000 no. of iterations is 3.12352e-06
+Average execution time for matrix order 8 and 1000 no. of iterations is 9.50336e-07
+Average execution time for matrix order 16 and 1000 no. of iterations is 2.22993e-06
+Average execution time for matrix order 32 and 1000 no. of iterations is 8.91638e-06
+Average execution time for matrix order 64 and 1000 no. of iterations is 2.34337e-05
+Average execution time for matrix order 128 and 1000 no. of iterations is 0.00018521
+Average execution time for matrix order 256 and 1000 no. of iterations is 0.000603258
+Average execution time for matrix order 512 and 1000 no. of iterations is 0.00222092
+Average execution time for matrix order 1024 and 1000 no. of iterations is 0.00838344
+Average execution time for matrix order 2048 and 1000 no. of iterations is 0.0696266
+Average execution time for matrix order 4096 and 1000 no. of iterations is 0.513642
+Average execution time for matrix order 8192 and 1000 no. of iterations is 3.641
+Average execution time for matrix order 16384 and 1000 no. of iterations is 16.9886
+Average execution time for matrix order 32768 and 100 no. of iterations is 84.8768
